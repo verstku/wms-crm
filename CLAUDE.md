@@ -24,8 +24,8 @@
 - запуск:          npm run dev   (http://localhost:3000)
 - проверки:        npm run lint && npm run format:check && npm run typecheck
 - unit-тесты:      npm run test       (Vitest)
-- e2e-тесты:       npm run test:e2e   (Playwright; нужны запущенные БД и бэкенд)
-- типы API:        npm run gen:api    (нужен запущенный бэкенд)
+- e2e-тесты:       npm run test:e2e   (Playwright; нужна запущенная БД — бэкенд и фронт Playwright поднимает сам)
+- типы API:        npm run gen:api    (берёт схему из кода бэкенда — запускать бэкенд не нужно)
 Все проверки разом, из корня: ./scripts/check.sh
 
 ## Процесс разработки (Superpowers)
@@ -35,7 +35,7 @@
 - Git worktrees не используем: работаем в этой папке на обычной ветке (ответ на вопрос using-git-worktrees — «нет», спрашивать не нужно).
 - Спеки и планы сохраняй в пути по умолчанию Superpowers и пиши их на русском.
 - План выполняй через superpowers:executing-plans. Выбор способа выполнения в конце writing-plans не предлагай. Subagent-driven — только по моей просьбе.
-- Финальное ревью ветки: если дифф меняет вход, токены, пароли, проверку ролей и прав, CORS или cookies, либо .env.example; в остальных случаях — sonnet. Модель ревьюера указывай явно.
+- Финальное ревью ветки: если дифф меняет вход, токены, пароли, проверку ролей и прав, CORS или cookies, либо .env.example, — opus; в остальных случаях — sonnet. Модель ревьюера указывай явно.
 - Завершение ветки: всегда вариант «Push and create a Pull Request».
   Локальный merge в main запрещён — PR вливаю я сам после ревью и зелёного CI.
 - Визуальный помощник brainstorming (браузер) не предлагай.
