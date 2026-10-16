@@ -39,7 +39,7 @@ wms-crm/
 │   └── CLAUDE.md
 ├── frontend/                         # Next.js 16, Node 24 (.nvmrc)
 │   ├── messages/        ru.json, en.json
-│   ├── e2e/             home.spec.ts
+│   ├── e2e/             home.spec.ts, global-teardown.ts
 │   ├── src/
 │   │   ├── app/         layout.tsx, page.tsx, globals.css
 │   │   ├── components/  backend-status.tsx, ui/ (card, badge)
@@ -305,8 +305,11 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
   1. Реальный стек: виден заголовок «Система управления складом» и текст «Бэкенд: работает».
   2. `page.route("**/api/health")` → `fulfill` со статусом 503 → «Бэкенд: недоступен».
   3. `page.route("**/api/health")` → `abort()` (обрыв соединения) → «Бэкенд: недоступен».
+- `globalTeardown` (`e2e/global-teardown.ts`) после прогона удаляет `.next-e2e`: сборка всё равно каждый раз новая,
+  а устаревшие типы из `.next-e2e/types` (папка в `include` tsconfig) могли бы ломать `typecheck` после удаления
+  или переименования страниц.
 - Нужна только запущенная БД. Если запущен dev-сервер на 3000, e2e ему не мешает
-  (`.next/dev` и `.next-e2e` — разные папки). После e2e `git status` чист.
+  (`.next/dev` и `.next-e2e` — разные папки). После e2e `git status` чист, папки `.next-e2e` нет.
 
 ## 7. scripts/check.sh
 
@@ -362,7 +365,13 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 
 ## 10. Этапы реализации
 
-Каждый этап заканчивается проверкой владельцем и коммитом (после подтверждения).
+Порядок завершения каждого этапа:
+
+1. В конце этапа — список команд, которыми владелец проверяет результат (с ожидаемым результатом каждой).
+2. Владелец проверяет, затем коммит (после подтверждения).
+3. После коммита — остановка до команды владельца на следующий этап.
+
+Этапы:
 
 1. **Бэкенд + БД:** `docker-compose.yml`, init-скрипт, корневой `.env.example`, `.gitattributes`, весь `backend/`
    (включая выгрузку OpenAPI, Alembic и тесты).
@@ -378,7 +387,8 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 - `baseUrl` openapi-fetch для относительных путей в браузере; поведение при сетевой ошибке;
 - next-intl: настройка без i18n-маршрутизации и типизация `AppConfig`;
 - `next typegen` и `include` в `tsconfig.json` при своём `distDir`;
-- Playwright: массив `webServer`, запуск команды через shell (`&&`), `page.route` / `abort`;
+- Playwright: массив `webServer`, запуск команды через shell (`&&`), `page.route` / `abort`, `globalTeardown`
+  (выполняется ли до или после остановки `webServer`);
 - SQLAlchemy 2.0: `join_transaction_mode="create_savepoint"`; pydantic-settings: `env_file`;
 - Alembic: `config.attributes` в `env.py`, `file_template`, ruff в `post_write_hooks`, `alembic check`;
 - GitHub Actions: сервис-контейнеры, `astral-sh/setup-uv`, `actions/setup-node` с `node-version-file`.
