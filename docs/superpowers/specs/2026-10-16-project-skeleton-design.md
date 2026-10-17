@@ -1,6 +1,6 @@
 # Скелет проекта «Система управления складом» — дизайн
 
-Дата: 2026-10-16, обновлено 2026-10-17 по итогам ревью. Ветка: `feature/skeleton`.
+Дата: 2026-10-16, обновлено 2026-10-17 по итогам ревью и сверки при написании плана. Ветка: `feature/skeleton`.
 
 ## 1. Цель
 
@@ -65,12 +65,12 @@ wms-crm/
 │   │   ├── lib/         utils.ts, backend-status.ts, backend-status.test.ts, api/client.ts, api/schema.d.ts
 │   │   └── global.ts
 │   ├── openapi.json
-│   ├── next.config.ts, tsconfig.json, eslint.config.mjs, postcss.config.mjs, .prettierrc, .prettierignore
+│   ├── next.config.ts, tsconfig.json, eslint.config.mjs, .prettierrc, .prettierignore
 │   ├── vitest.config.mts, playwright.config.ts, components.json
 │   ├── package.json, package-lock.json, .nvmrc, .gitignore
 │   ├── .env.example
 │   ├── AGENTS.md                     # создаёт create-next-app, не редактируем
-│   └── CLAUDE.md                     # строка «@AGENTS.md» + наши правила
+│   └── CLAUDE.md                     # создаём сами: строка «@AGENTS.md» + наши правила
 ├── docker/postgres/init/01-create-databases.sql
 ├── scripts/check.sh                  # исполняемый бит
 ├── .github/workflows/ci.yml
@@ -160,13 +160,15 @@ CREATE DATABASE wms_crm_test;
 
 - `fastapi` — веб-фреймворк;
 - `uvicorn[standard]` — ASGI-сервер;
-- `sqlalchemy` — ORM, синхронный режим;
+- `sqlalchemy` — ORM, синхронный режим (актуальная версия — 2.1, API в стиле 2.x);
 - `psycopg[binary]` — драйвер PostgreSQL 3 (binary — без системной libpq);
 - `alembic` — миграции;
 - `pydantic` — схемы (используем напрямую, поэтому объявлен явно);
 - `pydantic-settings` — настройки из окружения и `.env`.
 
-Dev-группа (`uv add --dev`): `pytest`, `ruff`, `mypy`, `httpx` (нужен для `fastapi.testclient.TestClient`).
+Dev-группа (`uv add --dev`): `pytest`, `ruff`, `mypy`, `httpx2` (нужен для `fastapi.testclient.TestClient`).
+Не `httpx`: Starlette 1.8 (на нём построен FastAPI 0.143) объявил `httpx` в тестовом клиенте устаревшим и выдаёт
+предупреждение при каждом прогоне тестов; документация FastAPI пока говорит про `httpx` — она отстаёт от кода.
 
 ### 4.2. Настройки (`app/core/config.py`)
 
@@ -233,10 +235,14 @@ Dev-группа (`uv add --dev`): `pytest`, `ruff`, `mypy`, `httpx` (нужен
 Проект создаётся `create-next-app` (TypeScript, Tailwind CSS, ESLint, App Router, `src/`, алиас `@/*`, npm).
 `.nvmrc` = `24` (актуальная LTS). `tsconfig.json` — `strict`.
 
-`create-next-app` (с Next.js 16.2) по умолчанию создаёт ещё два файла: `AGENTS.md` — инструкцию агентам читать
-документацию Next.js из `node_modules/next/dist/docs/` (она совпадает с установленной версией), и `CLAUDE.md`
-со строкой `@AGENTS.md`. Оба файла оставляем: `AGENTS.md` не редактируем, наши правила дописываются
-в `frontend/CLAUDE.md` под строкой `@AGENTS.md` (раздел 9).
+`create-next-app` по умолчанию создаёт `AGENTS.md` — инструкцию агентам читать документацию Next.js
+из `node_modules/next/dist/docs/` (она совпадает с установленной версией). `CLAUDE.md` версия 16.4 не создаёт
+(проверено запуском и по исходнику), поэтому `frontend/CLAUDE.md` создаём сами на этапе 2 с одной строкой
+`@AGENTS.md`; наши правила дописываются под ней на этапе 4 (раздел 9). `AGENTS.md` не редактируем: `next dev`,
+заметив агента, сам восстанавливает в нём свой блок.
+
+Tailwind CSS подключается так, как это делает шаблон 16.4: загрузчиком `@tailwindcss/turbopack` в блоке
+`turbopack.rules` файла `next.config.ts`. Файла `postcss.config.mjs` нет.
 
 Ненужные файлы шаблона удаляются: `frontend/README.md` (README в проекте один — корневой, на русском)
 и картинки в `public/`, которые использовала стартовая страница шаблона.
@@ -249,18 +255,23 @@ Dev-группа (`uv add --dev`): `pytest`, `ruff`, `mypy`, `httpx` (нужен
 | `prettier`, `eslint-config-prettier` | dev | форматирование; отключение конфликтующих правил ESLint |
 | `vitest` | dev | unit-тесты чистой логики |
 | `@playwright/test` | dev | e2e-тесты (Chromium) |
-| shadcn/ui `card`, `badge` | код в `src/components/ui` | карточка статуса и метка; зависимости, которые ставит `shadcn init`, перечисляются в плане |
+| shadcn/ui `card`, `badge` | код в `src/components/ui` | карточка статуса и метка; `shadcn init` ставит `@base-ui/react`, `class-variance-authority`, `cn`, `lucide-react`, `shadcn`, `tw-animate-css` |
 
-shadcn/ui инициализируется с библиотекой компонентов **Base UI**: `shadcn init --base base --template next
---no-monorepo`. Без `--base` или `--preset` команда останавливается на интерактивном вопросе даже с `-y`.
-Стиль (пресет) выбирается в плане.
+shadcn/ui инициализируется с библиотекой компонентов **Base UI** и пресетом **Nova** (иконки Lucide, шрифт Geist):
+`shadcn init --base base --preset nova --template next --no-monorepo`. Без `--preset` команда останавливается
+на интерактивном вопросе о пресете, даже если `--base` указан.
+
+`cn` в таблице — npm-пакет от автора shadcn (репозиторий `shadcn-ui/cn`), он заменяет прежнюю пару `clsx` +
+`tailwind-merge`. `src/lib/utils.ts` только реэкспортирует из него функцию `cn`, а компоненты импортируют её
+прямо из пакета `cn`.
 
 ### 5.2. Конфигурация
 
 - `next.config.ts`:
   - `distDir: process.env.NEXT_DIST_DIR ?? ".next"`;
   - rewrite `/api/:path*` → `${process.env.BACKEND_URL ?? "http://localhost:8000"}/api/:path*`;
-  - обёртка `createNextIntlPlugin()`.
+  - обёртка `createNextIntlPlugin()`;
+  - блок `turbopack.rules` из шаблона (подключение Tailwind) сохраняется — плагин next-intl его не затирает.
 - `tsconfig.json`: в `include` заранее добавлены `.next-e2e/types/**/*.ts` и `.next-e2e/dev/types/**/*.ts`.
   `next build` с `distDir=.next-e2e` требует оба пути (свои типы и типы dev-режима) и, если какого-то нет,
   перезаписывает `tsconfig.json` — тогда после e2e `git status` был бы не чист.
@@ -420,8 +431,9 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 - Зависимости строго по lock-файлам: `uv sync --locked`, `npm ci`.
 - `setup-node`: `node-version-file: frontend/.nvmrc`, `cache: npm`, `cache-dependency-path: frontend/package-lock.json`.
   Lock-файл лежит не в корне: без `cache-dependency-path` `setup-node` падает («Dependencies lock file is not found»).
-- Версии actions (`checkout`, `setup-node`, `astral-sh/setup-uv`, `upload-artifact`) — актуальные мажорные,
-  сверяются при написании плана.
+- Версии actions (сверено 2026-10-17): `actions/checkout@v7`, `actions/setup-node@v7`,
+  `actions/upload-artifact@v7`; `astral-sh/setup-uv@v10.3.0` — точная версия, потому что мажорных тегов
+  (`v10`) setup-uv не публикует.
 
 | Задание | Шаги |
 |---|---|
@@ -440,14 +452,15 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
   - команда БД — `docker compose up -d --wait` (вместо `docker compose up -d db`);
   - в строке про e2e: не запускать одновременно с pytest — обе используют `wms_crm_test`;
   - раздел «Библиотеки»: для Next.js — встроенная документация `frontend/node_modules/next/dist/docs/`
-    (см. `frontend/AGENTS.md`), для остальных библиотек — Context7.
+    (см. `frontend/AGENTS.md`), для остальных библиотек — Context7;
+  - раздел «Структура»: «SQLAlchemy 2.0» → «SQLAlchemy 2» (ставится актуальная 2.1, API в стиле 2.x).
 - **backend/CLAUDE.md** (коротко): команды; эндпоинты с БД — обычный `def`; адрес БД — только через
   `effective_database_url`; модели наследуют `Base` и реэкспортируются в `app/models/__init__.py`;
   миграции — `alembic revision --autogenerate`, автосгенерированную миграцию всегда просматривать
   (переименование колонки autogenerate видит как удаление и создание — исправлять вручную на `op.alter_column`);
   после изменения эндпоинтов или схем — `npm run gen:api` в `frontend/` и закоммитить `openapi.json` и `schema.d.ts`;
   тесты — через фикстуры `client` и `db_session`.
-- **frontend/CLAUDE.md**: первая строка — `@AGENTS.md` (её создаёт `create-next-app`), ниже коротко: команды;
+- **frontend/CLAUDE.md**: первая строка — `@AGENTS.md` (файл с этой строкой создаётся на этапе 2), ниже коротко: команды;
   тексты интерфейса — только в `messages/*.json` (ru и en); запросы — через `src/lib/api/client.ts`;
   после изменения API — `npm run gen:api`; компоненты — `npx shadcn add`; Vitest — только чистая логика
   (`src/lib`, `src/i18n`); e2e — в `e2e/`.
@@ -466,7 +479,8 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 
 1. **Бэкенд + БД:** `docker-compose.yml`, init-скрипт, корневой `.env.example`, весь `backend/`
    (включая выгрузку OpenAPI, Alembic и тесты).
-2. **Фронтенд:** проект Next.js (с `AGENTS.md` и `CLAUDE.md` от `create-next-app`), next-intl, shadcn/ui (Base UI),
+2. **Фронтенд:** проект Next.js (`AGENTS.md` от `create-next-app` и наш `CLAUDE.md` со строкой `@AGENTS.md`),
+   next-intl, shadcn/ui (Base UI),
    API-клиент и `gen:api`, Vitest, Playwright. По TDD сначала падающие тесты — Vitest (`backend-status`,
    `messages`) и e2e (`home.spec.ts`), потом код: главная страница и `BackendStatus`. В конце — проверка
    типизации ключей переводов (5.3).
@@ -482,15 +496,15 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 
 - Next.js 16: `next dev` пишет в `.next/dev`, замок `<distDir>/lock` ставят `next dev` и `next build`;
   `next typegen` пишет в `<distDir>/types` и пересоздаёт `next-env.d.ts`; `next build` требует в `include`
-  `<distDir>/types/**/*.ts` и `<distDir>/dev/types/**/*.ts`; `create-next-app` с 16.2 создаёт `AGENTS.md`
-  и `CLAUDE.md` (отключается `--no-agents-md`).
+  `<distDir>/types/**/*.ts` и `<distDir>/dev/types/**/*.ts`; `create-next-app` 16.4 создаёт только `AGENTS.md`
+  (отключается `--no-agents-md`), `CLAUDE.md` — нет.
 - openapi-fetch: `baseUrl` необязателен; при сетевой ошибке запрос бросает исключение.
 - next-intl: без i18n-маршрутизации — `getRequestConfig` в `src/i18n/request.ts`, `NextIntlClientProvider`
   в layout; типизация — `AppConfig` в `global.ts`.
 - Playwright: `webServer` массивом; команда идёт через shell (`&&` работает); `env` дополняет `process.env`;
   `globalTeardown` — до остановки `webServer`; reporter по умолчанию `list`/`dot`, `html` по умолчанию
   открывается при падении.
-- SQLAlchemy 2.0: `join_transaction_mode="create_savepoint"` — рецепт документации для тестов;
+- SQLAlchemy 2.1: `join_transaction_mode="create_savepoint"` — рецепт документации для тестов;
   pydantic-settings: `extra="forbid"` по умолчанию действует и на `.env`.
 - Alembic: `config.attributes`, `alembic check`; несколько `post_write_hooks` выполняются по порядку;
   тип хука `module` — с 1.16.3; стандартный `script.py.mako` не проходит `ruff check` без `--fix`.
@@ -502,11 +516,18 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
   `setup-uv`: входы `python-version`, `working-directory`, `enable-cache`.
 - git: `check-ignore` без `--no-index` молчит для закоммиченных файлов; пути в `git diff` — от текущей папки.
 
-Сверить при написании плана:
+Сверено при написании плана 2026-10-17 (пробные запуски во временной папке, Context7, GitHub API):
 
-- флаги `create-next-app` для запуска без вопросов (React Compiler, Turbopack) и полный состав файлов;
-- `shadcn init --base base`: стиль (пресет) и устанавливаемые зависимости;
-- синтаксис хуков `module` и `file_template` в `alembic.ini`;
-- актуальные мажорные версии actions (`checkout`, `setup-node`, `astral-sh/setup-uv`, `upload-artifact`).
+- `create-next-app` 16.4.2 проходит без вопросов с флагами `--ts --tailwind --eslint --app --src-dir
+  --import-alias "@/*" --use-npm --no-react-compiler --no-cache-components --agents-md --no-agent-feedback
+  --disable-git --yes`. Флага для Turbopack нет — он включён по умолчанию. Tailwind подключается через
+  `@tailwindcss/turbopack`, `postcss.config.mjs` не создаётся, `CLAUDE.md` тоже;
+- `shadcn` 4.22: пресет обязателен (`--preset nova`); `init` создаёт `components.json` (стиль `base-nova`),
+  `src/lib/utils.ts`, `src/components/ui/button.tsx` и меняет `globals.css`; зависимости — в таблице 5.1;
+- Alembic 1.20: два хука типа `module` с разными именами (`ruff_fix`, `ruff_format`) и
+  `file_template = %%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s`;
+  созданная миграция проходит `ruff check` и `ruff format --check`;
+- версии actions — в разделе 8;
+- Starlette 1.8: для `TestClient` нужен `httpx2` (раздел 4.1).
 
 Источник — Context7; для Next.js после создания проекта — встроенная документация `frontend/node_modules/next/dist/docs/`.
