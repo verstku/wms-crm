@@ -25,6 +25,7 @@ next-intl, shadcn/ui (Base UI), openapi-fetch, Vitest, Playwright; Docker Compos
   psycopg 3.3, uvicorn 0.54, pytest 9.1, ruff 0.17, mypy 2.4, httpx2 2.13; next 16.4.2, next-intl 4.14,
   openapi-fetch 0.17, openapi-typescript 7.13, vitest 5.0, @playwright/test 1.64, prettier 3.9,
   eslint-config-prettier 10.1, shadcn 4.22. Если при установке мажорная версия окажется новее — остановиться и спросить.
+  Фактически установленные версии бэкенда — см. отклонение в задаче 2, шаге 1.
 - Зачем нужна каждая зависимость — спека 4.1 (бэкенд) и таблица 5.1 (фронтенд); подъём `@types/node` объяснён
   в задаче 6.
 - Порты: разработка — бэкенд 8000 (`wms_crm`), фронт 3000; e2e — бэкенд 8001 (`wms_crm_test`), фронт 3001
@@ -72,7 +73,7 @@ next-intl, shadcn/ui (Base UI), openapi-fetch, Vitest, Playwright; Docker Compos
 - Даёт: сервис `db` на `127.0.0.1:5432`; пользователь и пароль по умолчанию — `postgres`/`postgres`; базы
   `wms_crm` и `wms_crm_test`.
 
-- [ ] **Шаг 1: `docker-compose.yml`** — только сервис `db`, значения из спеки 3.1. Том — `pgdata:/var/lib/postgresql`
+- [x] **Шаг 1: `docker-compose.yml`** — только сервис `db`, значения из спеки 3.1. Том — `pgdata:/var/lib/postgresql`
   (объявить в `volumes:` верхнего уровня), init-папка — `./docker/postgres/init:/docker-entrypoint-initdb.d:ro`.
   Healthcheck — ровно так:
 
@@ -85,13 +86,13 @@ next-intl, shadcn/ui (Base UI), openapi-fetch, Vitest, Playwright; Docker Compos
       retries: 10
 ```
 
-- [ ] **Шаг 2: init-скрипт** `docker/postgres/init/01-create-databases.sql` — две строки `CREATE DATABASE` из спеки 3.2.
+- [x] **Шаг 2: init-скрипт** `docker/postgres/init/01-create-databases.sql` — две строки `CREATE DATABASE` из спеки 3.2.
 
-- [ ] **Шаг 3: корневой `.env.example`** — `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres` и комментарий
+- [x] **Шаг 3: корневой `.env.example`** — `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres` и комментарий
   (по-английски): при смене пароля поменять его в корневом `.env` и в обоих адресах в `backend/.env`, затем
   `docker compose down -v`.
 
-- [ ] **Шаг 4: проверка.**
+- [x] **Шаг 4: проверка.**
 
 Run (корень): `docker compose up -d --wait && docker compose ps`
 Expected: код 0, `db` — `healthy`.
@@ -118,7 +119,7 @@ Expected: пустой вывод.
   `test_database_url: str`, `use_test_database: bool = False`, свойство `effective_database_url -> str`;
   `get_settings() -> Settings` под `@lru_cache`.
 
-- [ ] **Шаг 1: создать проект** (из корня; зачем каждая зависимость — спека 4.1):
+- [x] **Шаг 1: создать проект** (из корня; зачем каждая зависимость — спека 4.1):
 
 ```bash
 uv init --bare --name wms-crm-backend --python 3.13 backend
@@ -129,7 +130,14 @@ uv add --dev pytest ruff mypy httpx2
 
 Expected: в `backend/` только `pyproject.toml`, `uv.lock`, `.python-version` и `.venv/` (последний — в `.gitignore`).
 
-- [ ] **Шаг 2: настройки инструментов в `pyproject.toml`** — спека 4.7, по секциям:
+Отклонение (2026-10-26, одобрено владельцем): установлены более свежие версии, чем проверенные 2026-10-17, —
+fastapi 0.162.0 (было 0.143), starlette 1.10.0 (было 1.8), httpx2 2.16.0 (было 2.13); остальные пакеты совпадают
+с планом с точностью до патч-версии. Мажорных скачков нет. Changelog FastAPI 0.143.1–0.162.0 и Starlette 1.9–1.10
+просмотрен: ломающие изменения касаются форм, `**extra` в параметрах, `root_path` и `openapi_prefix` — в скелете
+не используются; TestClient с httpx2, `responses=`, `include_router(prefix=)`, `dependency_overrides` и `app.openapi()`
+не затронуты, новых предупреждений об устаревании для них нет.
+
+- [x] **Шаг 2: настройки инструментов в `pyproject.toml`** — спека 4.7, по секциям:
 
 ```toml
 [tool.ruff]
@@ -155,10 +163,10 @@ pythonpath = ["."]
   `known-third-party`: в `backend/` есть папка `alembic/`, и без этой строки ruff считает пакет `alembic` своим кодом
   и ставит `from alembic import ...` после импортов `app`.
 
-- [ ] **Шаг 3: `backend/.env.example`** — три переменные из спеки 3.3 со значениями по умолчанию и тот же
+- [x] **Шаг 3: `backend/.env.example`** — три переменные из спеки 3.3 со значениями по умолчанию и тот же
   комментарий о смене пароля, что в задаче 1.
 
-- [ ] **Шаг 4: написать падающий тест** `backend/tests/test_config.py`:
+- [x] **Шаг 4: написать падающий тест** `backend/tests/test_config.py`:
 
 ```python
 from pathlib import Path
@@ -196,15 +204,20 @@ def test_effective_database_url(use_test_database: bool, expected: str) -> None:
     assert settings.effective_database_url == expected
 ```
 
-- [ ] **Шаг 5: запустить — падает.**
+Отклонение (2026-10-26, одобрено владельцем): в `test_env_file_is_in_backend_dir` части сравнения переставлены —
+`assert Path(__file__).resolve().parents[1] / ".env" == ENV_FILE`. Причина: в шаге 7 `ruff check` падал на правиле
+SIM300 («условие Йоды»): ruff считает имя в верхнем регистре (`ENV_FILE`) константой, а константа слева от `==`
+нарушает правило из набора `SIM` (шаг 2). Смысл теста не изменился.
+
+- [x] **Шаг 5: запустить — падает.**
 
 Run (`backend/`): `uv run pytest tests/test_config.py -v`
 Expected: FAIL — `ModuleNotFoundError` (`app` или `app.core.config`).
 
-- [ ] **Шаг 6: реализовать `app/core/config.py`** — спека 4.2: `ENV_FILE = Path(__file__).resolve().parents[2] / ".env"`,
+- [x] **Шаг 6: реализовать `app/core/config.py`** — спека 4.2: `ENV_FILE = Path(__file__).resolve().parents[2] / ".env"`,
   `model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")`, значения по умолчанию — из таблицы 3.3.
 
-- [ ] **Шаг 7: зелёные тесты и линтеры.**
+- [x] **Шаг 7: зелёные тесты и линтеры.**
 
 Run (`backend/`): `uv run pytest -v && uv run ruff check . && uv run ruff format --check . && uv run mypy app`
 Expected: 4 passed; ruff и mypy — без ошибок.
@@ -226,7 +239,7 @@ Expected: 4 passed; ruff и mypy — без ошибок.
 Шаги 1–2 — исключение из TDD (см. «Глобальные ограничения»): своих тестов у `base.py` и `db.py` нет, их проверяют
 шаг 6 этой задачи и тесты задачи 4.
 
-- [ ] **Шаг 1: модели.** `app/models/base.py` — `class Base(DeclarativeBase)` с
+- [x] **Шаг 1: модели.** `app/models/base.py` — `class Base(DeclarativeBase)` с
   `metadata = MetaData(naming_convention=NAMING_CONVENTION)`:
 
 ```python
@@ -241,13 +254,13 @@ NAMING_CONVENTION = {
 
   `app/models/__init__.py` реэкспортирует `Base` (`__all__ = ["Base"]`).
 
-- [ ] **Шаг 2: `app/core/db.py`** — спека 4.3: `engine` с `pool_pre_ping=True` и `connect_args={"connect_timeout": 3}`,
+- [x] **Шаг 2: `app/core/db.py`** — спека 4.3: `engine` с `pool_pre_ping=True` и `connect_args={"connect_timeout": 3}`,
   `SessionLocal = sessionmaker(bind=engine)`, `get_db()` — генератор: `with SessionLocal() as session: yield session`.
 
-- [ ] **Шаг 3: `uv run alembic init alembic`** (в `backend/`), удалить `alembic/README`, создать пустой
+- [x] **Шаг 3: `uv run alembic init alembic`** (в `backend/`), удалить `alembic/README`, создать пустой
   `alembic/versions/.gitkeep`: git не хранит пустые папки, а без `versions/` `alembic revision` падает.
 
-- [ ] **Шаг 4: `alembic.ini`.** Удалить строку `sqlalchemy.url = ...`. Раскомментировать первый вариант шаблона имени:
+- [x] **Шаг 4: `alembic.ini`.** Удалить строку `sqlalchemy.url = ...`. Раскомментировать первый вариант шаблона имени:
   `file_template = %%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s`.
   В секции `[post_write_hooks]`:
 
@@ -261,12 +274,12 @@ ruff_format.module = ruff
 ruff_format.options = format REVISION_SCRIPT_FILENAME
 ```
 
-- [ ] **Шаг 5: `alembic/env.py`** — спека 4.6: `url = config.attributes.get("database_url") or
+- [x] **Шаг 5: `alembic/env.py`** — спека 4.6: `url = config.attributes.get("database_url") or
   get_settings().effective_database_url`; `target_metadata = Base.metadata` (из `app.models`); онлайн —
   `create_engine(url, poolclass=pool.NullPool)`; офлайн — `context.configure(url=url, ...)`; блок `fileConfig(...)`
   из шаблона оставить. Затем `uv run ruff check --fix . && uv run ruff format .`.
 
-- [ ] **Шаг 6: проверка Alembic** (БД из задачи 1 запущена).
+- [x] **Шаг 6: проверка Alembic** (БД из задачи 1 запущена).
 
 Run (`backend/`): `uv run alembic upgrade head`
 Expected: код 0.
@@ -290,7 +303,7 @@ Expected: `Running post write hook 'ruff_fix'` и `'ruff_format'`; файл
 Run: `uv run ruff check . && uv run ruff format --check .`, затем удалить созданный файл миграции.
 Expected: ruff зелёный; в `alembic/versions/` остался только `.gitkeep` (и `__pycache__/`, он в `.gitignore`).
 
-- [ ] **Шаг 7: проверки.**
+- [x] **Шаг 7: проверки.**
 
 Run (`backend/`): `uv run ruff check . && uv run ruff format --check . && uv run mypy app && uv run pytest`
 Expected: всё зелёное, 4 passed.
@@ -310,7 +323,7 @@ Expected: всё зелёное, 4 passed.
   `is_database_available(session: Session) -> bool`; `GET /api/health` → 200 `{"status": "ok", "db": "ok"}`
   или 503 `{"status": "error", "db": "error"}`.
 
-- [ ] **Шаг 1: `tests/conftest.py`** — спека 6.1:
+- [x] **Шаг 1: `tests/conftest.py`** — спека 6.1:
   - `test_engine()` — `scope="session"`, без `autouse`: тестам без БД (`test_config.py`, тест 503) она не нужна.
     Берёт `get_settings().test_database_url`; если `make_url(url).database` не оканчивается на `_test` —
     `pytest.exit("TEST_DATABASE_URL must point to a database whose name ends with '_test', got '<имя>'", returncode=1)`
@@ -323,7 +336,7 @@ Expected: всё зелёное, 4 passed.
   - `client(db_session)` — `app.dependency_overrides[get_db] = lambda: db_session`;
     `with TestClient(app) as test_client: yield test_client`; затем `app.dependency_overrides.clear()`.
 
-- [ ] **Шаг 2: написать падающие тесты** `tests/test_health.py`:
+- [x] **Шаг 2: написать падающие тесты** `tests/test_health.py`:
 
 ```python
 import time
@@ -372,12 +385,12 @@ def test_health_error_when_database_unavailable(unavailable_db_client: TestClien
     assert elapsed < 5
 ```
 
-- [ ] **Шаг 3: запустить — падает.**
+- [x] **Шаг 3: запустить — падает.**
 
 Run (`backend/`): `uv run pytest tests/test_health.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'app.main'`.
 
-- [ ] **Шаг 4: реализовать** — спека 4.4:
+- [x] **Шаг 4: реализовать** — спека 4.4:
   - `app/schemas/health.py` — `HealthResponse(BaseModel)`.
   - `app/services/health.py` — `is_database_available`: `session.execute(text("SELECT 1"))`, `SQLAlchemyError` → `False`.
   - `app/api/routes/health.py` — `router = APIRouter()`;
@@ -387,7 +400,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'app.main'`.
   - `app/api/router.py` — `api_router = APIRouter()` и `api_router.include_router(health.router)`.
   - `app/main.py` — `app = FastAPI(title="WMS CRM API")`, `app.include_router(api_router, prefix="/api")`.
 
-- [ ] **Шаг 5: тесты зелёные.**
+- [x] **Шаг 5: тесты зелёные.**
 
 Run (`backend/`): `uv run pytest -v`
 Expected: 6 passed, предупреждений `StarletteDeprecationWarning` нет.
@@ -396,19 +409,29 @@ Run (корень): `docker compose exec db psql -U postgres -d wms_crm_test -c 
 Expected: есть таблица `alembic_version`. Фикстура удалила схему и заново применила миграции к `wms_crm_test` —
 значит, `env.py` взял адрес из `config.attributes["database_url"]`, а не из настроек (в pytest они указывают на `wms_crm`).
 
-- [ ] **Шаг 6: защита тестовой БД (Review Focus 3).**
+- [x] **Шаг 6: защита тестовой БД (Review Focus 3).**
 
 Run (`backend/`): `TEST_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/wms_crm_guard_check uv run pytest`
 Expected: прогон останавливается с сообщением про `_test`, код 1. Базы `wms_crm_guard_check` нет: если защита сломана,
 будет ошибка подключения, а не сообщение про `_test`, — и ни одна БД не пострадает.
 
-- [ ] **Шаг 7: живой сервер.**
+Отклонение (2026-10-26, одобрено владельцем по итогам ревью этапа 1, замечание M1): защита в `conftest.py` —
+в два уровня. Проверка имени в пути адреса до подключения осталась; добавлена вторая — `SELECT current_database()`
+в той же транзакции перед `DROP SCHEMA` (общая функция `exit_unless_test_database`). Причина: адрес
+`…/wms_crm_test?dbname=другая_база` проходил первую проверку, а psycopg подключался к базе из параметра — и `DROP SCHEMA`
+выполнялся там. Проверено на временной пустой базе `wms_crm_guard_probe` (создана и удалена с разрешения владельца):
+до исправления — 7 passed, схема `public` пробной базы пересоздана (OID 2200 → 16431); после — остановка с
+`got 'wms_crm_guard_probe'`, код 1, OID не изменился. Спека 6.1 обновлена. После исправления повторены шаги 5, 6 и 8:
+7 passed (с тестом задачи 5), `alembic_version` в `wms_crm_test` есть; защита — сообщение про `_test`, код 1
+(до остановки проходят 5 тестов без БД); ruff и mypy без ошибок.
+
+- [x] **Шаг 7: живой сервер.**
 
 Run (`backend/`): `uv run uvicorn app.main:app --reload --port 8000` в фоне, затем
 `curl -i http://localhost:8000/api/health`, затем остановить сервер.
 Expected: `200 OK`, тело `{"status":"ok","db":"ok"}`.
 
-- [ ] **Шаг 8: линтеры и типы.**
+- [x] **Шаг 8: линтеры и типы.**
 
 Run (`backend/`): `uv run ruff check . && uv run ruff format --check . && uv run mypy app`
 Expected: без ошибок.
@@ -424,7 +447,7 @@ Expected: без ошибок.
 - Даёт: команду `python -m app.export_openapi <путь>` (её вызывают `npm run gen:api`, `check.sh` и CI);
   функцию `export_openapi(path: Path) -> None`.
 
-- [ ] **Шаг 1: написать падающий тест** — он вызывает ту же команду, что `gen:api` и `check.sh`:
+- [x] **Шаг 1: написать падающий тест** — он вызывает ту же команду, что `gen:api` и `check.sh`:
 
 ```python
 import json
@@ -448,24 +471,24 @@ def test_export_openapi_writes_schema(tmp_path: Path) -> None:
     assert {"200", "503"} <= responses.keys()
 ```
 
-- [ ] **Шаг 2: запустить — падает.**
+- [x] **Шаг 2: запустить — падает.**
 
 Run (`backend/`): `uv run pytest tests/test_export_openapi.py -v`
 Expected: FAIL — `CalledProcessError` (`No module named app.export_openapi`).
 
-- [ ] **Шаг 3: реализовать `app/export_openapi.py`** — спека 4.5: `export_openapi(path)` пишет в UTF-8
+- [x] **Шаг 3: реализовать `app/export_openapi.py`** — спека 4.5: `export_openapi(path)` пишет в UTF-8
   `json.dumps(app.openapi(), indent=2, ensure_ascii=False) + "\n"`; аргумент — `argparse` с одним позиционным
   `path`, разбор под `if __name__ == "__main__":`.
 
-- [ ] **Шаг 4: всё зелёное.**
+- [x] **Шаг 4: всё зелёное.**
 
 Run (`backend/`): `uv run pytest -v && uv run ruff check . && uv run ruff format --check . && uv run mypy app`
 Expected: 7 passed; ruff и mypy без ошибок.
 
 ### Завершение этапа 1
 
-- [ ] **Шаг 1:** `git add -A` — чтобы после проверок `git status` показывал только то, что изменили сами проверки.
-- [ ] **Шаг 2: список проверок для владельца** — точные команды из раздела «Команды» CLAUDE.md и таблицы спеки 1.1
+- [x] **Шаг 1:** `git add -A` — чтобы после проверок `git status` показывал только то, что изменили сами проверки.
+- [x] **Шаг 2: список проверок для владельца** — точные команды из раздела «Команды» CLAUDE.md и таблицы спеки 1.1
   (команда БД — уже в новом виде, в CLAUDE.md она обновится на этапе 4):
 
 ```bash
@@ -483,11 +506,18 @@ uv run alembic upgrade head                                       # код 0
 uv run alembic revision --autogenerate -m "check template"        # файл в alembic/versions/, имя начинается с даты
 uv run ruff check . && uv run ruff format --check .               # зелёный; затем удалить созданный файл миграции
 
+# backend/ — защита тестовой БД от обхода через ?dbname= (временная пустая база: если защита сломана,
+# пострадает только её схема)
+docker compose exec db psql -U postgres -c 'CREATE DATABASE wms_crm_guard_probe'
+TEST_DATABASE_URL='postgresql+psycopg://postgres:postgres@localhost:5432/wms_crm_test?dbname=wms_crm_guard_probe' uv run pytest; echo $?
+#   → «... ends with '_test', got 'wms_crm_guard_probe'», последняя строка — 1
+docker compose exec db psql -U postgres -c 'DROP DATABASE wms_crm_guard_probe'
+
 # корень
-git status --short    # только строки «A » (и, возможно, файл плана)
+git status --short    # только строки «A » (и, возможно, файлы плана и спеки)
 ```
 
-- [ ] **Шаг 3: после подтверждения — коммит.** `git add -A` (захватит отметки чекбоксов в плане), затем
+- [x] **Шаг 3: после подтверждения — коммит.** `git add -A` (захватит отметки чекбоксов в плане), затем
   `git commit -m "feat: add backend skeleton with health endpoint and local database"`. Остановка до команды на этап 2.
 
 ---
@@ -976,7 +1006,10 @@ Expected: без ошибок. Настоящая проверка — зелё�
 - [ ] **Шаг 2: корневой `CLAUDE.md`** — четыре правки из спеки 9: команда БД — `docker compose up -d --wait`;
   в строке про e2e — не запускать одновременно с pytest; «Библиотеки» — Next.js через
   `frontend/node_modules/next/dist/docs/`, остальное через Context7; «SQLAlchemy 2.0» → «SQLAlchemy 2».
-- [ ] **Шаг 3: `backend/CLAUDE.md`** — содержание из спеки 9.
+- [ ] **Шаг 3: `backend/CLAUDE.md`** — содержание из спеки 9. Плюс два правила из раздела «Отложенные замечания
+  ревью этапа 1» (в конце плана):
+  - перед первым тестом с `caplog` добавить `disable_existing_loggers=False` в `fileConfig` в `alembic/env.py`;
+  - в коде приложения доступ к БД — только через `get_db`; `SessionLocal` напрямую не использовать.
 - [ ] **Шаг 4: `frontend/CLAUDE.md`** — под строкой `@AGENTS.md` правила из спеки 9; затем `npm run format` в `frontend/`.
 - [ ] **Шаг 5: `docs/ROADMAP.md`** — таблица «Модуль | Статус»: скелет проекта — готово; пользователи и роли, каталог
   товаров, склады, остатки и движения, переключение языка ru/en — запланировано.
@@ -1030,3 +1063,38 @@ git commit -m "docs: add README, roadmap and CLAUDE.md rules"
   (push и `gh pr create` — после подтверждения).
 - [ ] **Шаг 6: CI** — `gh pr checks`: задания `backend`, `frontend`, `e2e` зелёные. Если нет —
   superpowers:systematic-debugging.
+
+---
+
+## Отложенные замечания ревью этапа 1
+
+Ревью staged-изменений этапа 1 (2026-10-26, модель opus). Исправлено сразу: M1 (защита тестовой БД в два уровня —
+см. отклонение в задаче 4, шаге 6) и P2 (фактические версии в спеке 4.1). Не исправляются (решение владельца):
+M5 — таймаут в `test_health.py` продублирован намеренно, спека 6.1 требует «тот же `connect_timeout=3`»;
+M6 — `DROP SCHEMA` без `IF EXISTS` — так в спеке, ошибка при ручном удалении схемы понятна;
+M7 — `dependency_overrides.clear()` — так в плане, вреда нет.
+
+Отложены:
+
+- **M2 — `fileConfig` в `alembic/env.py` отключает существующие логгеры.** Фикстура `test_engine` вызывает
+  `command.upgrade` внутри процесса pytest, и `fileConfig(...)` с `disable_existing_loggers=True` (по умолчанию)
+  отключает уже созданные логгеры приложения. Почему отложено: сейчас логов в тестах нет, вреда нет. Когда вернуться:
+  перед первым тестом с `caplog` — добавить `disable_existing_loggers=False` (правило — в `backend/CLAUDE.md`,
+  задача 13, шаг 3).
+- **M3 — ответ 503 в `/api/health` ничего не пишет в лог.** Почему отложено: формат и уровни логирования
+  приложения ещё не определены. Когда вернуться: при выборе подхода к логированию бэкенда (не позже первого
+  бизнес-модуля) — `logger.warning(..., exc_info=True)` в `is_database_available`.
+- **M4 — `prepend_sys_path = .` в `alembic.ini` зависит от текущей папки.** Alembic работает только при запуске
+  из `backend/` (так написано во всех командах, так же работают `check.sh` и CI). Почему отложено: реальной
+  поломки нет. Когда вернуться: если понадобится запускать Alembic из другой папки — `prepend_sys_path = %(here)s`.
+- **P1 — во время pytest `engine` и `SessionLocal` приложения смотрят на рабочую `wms_crm`** (спека 6.1: тесты идут
+  через `db_session`). Если код приложения возьмёт `SessionLocal` напрямую (например, при запуске приложения или
+  в фоновой задаче), pytest молча будет писать в рабочую базу. Почему отложено: дизайн спеки в этом коммите
+  не меняем. Когда вернуться: при проектировании первого бизнес-модуля бэкенда (вариант — `USE_TEST_DATABASE=true`
+  в начале `conftest.py`; тогда нужна новая проверка того, что `env.py` берёт адрес из `config.attributes`).
+  До решения — правило в `backend/CLAUDE.md` (задача 13, шаг 3): доступ к БД только через `get_db`.
+- **Пример ответа 503 в `/docs` показывает `{"status":"ok","db":"ok"}`** (замечание владельца). У 503 та же схема
+  `HealthResponse`, а Swagger UI строит пример из первого значения каждого `Literal`. Почему отложено: соглашения
+  о примерах в OpenAPI ещё нет. Когда вернуться: когда договоримся о примерах в OpenAPI для эндпоинтов.
+  Исправление — явный пример `{"status": "error", "db": "error"}` для 503 в `responses` декоратора; после этого —
+  `npm run gen:api` (типы API изменятся).

@@ -51,7 +51,7 @@ wms-crm/
 │   │   ├── services/    health.py
 │   │   └── api/         router.py, routes/health.py
 │   ├── alembic/         env.py, script.py.mako, versions/
-│   ├── tests/           conftest.py, test_health.py, test_export_openapi.py
+│   ├── tests/           conftest.py, test_config.py, test_health.py, test_export_openapi.py
 │   ├── alembic.ini, pyproject.toml, uv.lock, .python-version
 │   ├── .env.example
 │   └── CLAUDE.md
@@ -167,8 +167,10 @@ CREATE DATABASE wms_crm_test;
 - `pydantic-settings` — настройки из окружения и `.env`.
 
 Dev-группа (`uv add --dev`): `pytest`, `ruff`, `mypy`, `httpx2` (нужен для `fastapi.testclient.TestClient`).
-Не `httpx`: Starlette 1.8 (на нём построен FastAPI 0.143) объявил `httpx` в тестовом клиенте устаревшим и выдаёт
+Не `httpx`: начиная со Starlette 1.8 `httpx` в тестовом клиенте объявлен устаревшим и выдаёт
 предупреждение при каждом прогоне тестов; документация FastAPI пока говорит про `httpx` — она отстаёт от кода.
+Фактически установлены (2026-10-26, этап 1): FastAPI 0.162, Starlette 1.10, httpx2 2.16 — новее проверенных
+при написании плана (FastAPI 0.143, Starlette 1.8, httpx2 2.13); см. отклонение в плане, задача 2, шаг 1.
 
 ### 4.2. Настройки (`app/core/config.py`)
 
@@ -335,7 +337,11 @@ shadcn/ui инициализируется с библиотекой компо�
 `tests/conftest.py`:
 
 - В начале прогона (фикстура уровня сессии): тестовый движок создаётся от `TEST_DATABASE_URL` из настроек;
-  проверка, что имя БД в этом адресе оканчивается на `_test` (иначе — остановка с понятной ошибкой);
+  защита в два уровня, при нарушении любого — остановка с понятной ошибкой до `DROP SCHEMA`:
+  (1) до подключения — имя БД в пути адреса оканчивается на `_test`;
+  (2) после подключения, в той же транзакции перед `DROP SCHEMA`, — `SELECT current_database()` тоже оканчивается
+  на `_test`: параметр адреса (например, `?dbname=другая_база`) может подменить базу из пути, а первая проверка
+  этого не видит;
   `DROP SCHEMA public CASCADE; CREATE SCHEMA public;`;
   `alembic upgrade head` с `config.attributes["database_url"] = TEST_DATABASE_URL`.
   Так изменённая миграция или данные от e2e не влияют на тесты.

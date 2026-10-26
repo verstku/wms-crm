@@ -1,0 +1,2 @@
+CREATE DATABASE wms_crm;
+CREATE DATABASE wms_crm_test;
