@@ -1,0 +1,13 @@
+{
+  "Metadata": {
+    "title": "Warehouse Management System"
+  },
+  "HomePage": {
+    "title": "Warehouse Management System"
+  },
+  "BackendStatus": {
+    "checking": "Backend: checking…",
+    "ok": "Backend: running",
+    "unavailable": "Backend: unavailable"
+  }
+}

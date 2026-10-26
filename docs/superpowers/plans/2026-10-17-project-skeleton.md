@@ -538,7 +538,7 @@ git status --short    # только строки «A » (и, возможно, 
 - Даёт: скрипты `lint`, `format`, `format:check`, `typecheck`; `next.config.ts` с `distDir` и rewrites
   (обёртку next-intl добавит задача 10).
 
-- [ ] **Шаг 1: создать проект** (из корня; версия — та, что проверена):
+- [x] **Шаг 1: создать проект** (из корня; версия — та, что проверена):
 
 ```bash
 npx create-next-app@16.4.2 frontend --ts --tailwind --eslint --app --src-dir --import-alias "@/*" \
@@ -548,10 +548,10 @@ npx create-next-app@16.4.2 frontend --ts --tailwind --eslint --app --src-dir --i
 Expected: «Success! Created frontend», вопросов нет; есть `frontend/AGENTS.md`; нет `CLAUDE.md` и
 `postcss.config.mjs`; в `next.config.ts` — блок `turbopack.rules` с `@tailwindcss/turbopack`.
 
-- [ ] **Шаг 2: служебные файлы.** Удалить `frontend/README.md`. `.nvmrc` — `24`. `CLAUDE.md` — одна строка
+- [x] **Шаг 2: служебные файлы.** Удалить `frontend/README.md`. `.nvmrc` — `24`. `CLAUDE.md` — одна строка
   `@AGENTS.md`. `.env.example` — `BACKEND_URL=http://localhost:8000`. `AGENTS.md` не трогать.
 
-- [ ] **Шаг 3: зависимости.**
+- [x] **Шаг 3: зависимости.**
 
 Run (`frontend/`): `npm install -D @types/node@^24 prettier eslint-config-prettier` (зачем Prettier
 и eslint-config-prettier — таблица спеки 5.1)
@@ -559,7 +559,7 @@ Run (`frontend/`): `npm install -D @types/node@^24 prettier eslint-config-pretti
 `@types/node` поднимается с `^20` (так ставит шаблон) до `^24`: у нас Node 24, а Vitest 5 (задача 8) требует
 `@types/node` ≥ 22 — с `^20` его установка падает с `ERESOLVE`.
 
-- [ ] **Шаг 4: конфигурация** — спека 5.2 и 5.5:
+- [x] **Шаг 4: конфигурация** — спека 5.2 и 5.5:
   - `package.json`, `scripts`: `lint` = `eslint .`, `format` = `prettier --write .`, `format:check` = `prettier --check .`,
     `typecheck` = `next typegen && tsc --noEmit`.
   - `.prettierrc` — `{}`: настройки Prettier по умолчанию, тот же стиль, что у шаблона.
@@ -573,7 +573,7 @@ Run (`frontend/`): `npm install -D @types/node@^24 prettier eslint-config-pretti
     возвращающий `` [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }] ``, где
     `backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000"`.
 
-- [ ] **Шаг 5: проверка.**
+- [x] **Шаг 5: проверка.**
 
 Run (`frontend/`): `npm run format && npm run lint && npm run format:check && npm run typecheck`
 Expected: код 0.
@@ -593,18 +593,23 @@ Expected: пустой вывод.
 - Даёт: `Card`, `CardContent` (и остальные части карточки) из `@/components/ui/card`; `Badge` с
   `variant: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link"` из `@/components/ui/badge`.
 
-- [ ] **Шаг 1: init.**
+- [x] **Шаг 1: init.**
 
 Run (`frontend/`): `npx shadcn@4.22.0 init --base base --preset nova --template next --no-monorepo`
 Expected: без вопросов, «Project initialization completed»; в `dependencies` — `@base-ui/react`,
 `class-variance-authority`, `cn`, `lucide-react`, `shadcn`, `tw-animate-css` (таблица спеки 5.1 и пояснение под ней);
 в `components.json` — `"style": "base-nova"`.
 
-- [ ] **Шаг 2: компоненты.**
+Отклонение (2026-10-26, по правилу владельца для патч-версий): CLI запущен версии 4.22.0, но в `dependencies`
+`init` записал `shadcn` `^4.22.1` (последняя версия на момент установки). Changelog 4.22.1 просмотрен: единственное
+исправление — `shadcn add --all` и интерактивный выбор компонентов показывают только компоненты стиля проекта;
+мы добавляем компоненты по именам (`add card badge`), план не затронут.
+
+- [x] **Шаг 2: компоненты.**
 
 Run: `npx shadcn@4.22.0 add card badge`, затем удалить `src/components/ui/button.tsx`.
 
-- [ ] **Шаг 3: форматирование и проверки.**
+- [x] **Шаг 3: форматирование и проверки.**
 
 Run: `npm run format && npm run lint && npm run format:check && npm run typecheck`
 Expected: код 0.
@@ -624,13 +629,13 @@ Expected: код 0.
   Ключи `BackendStatus.*` в переводах совпадают со значениями `BackendState`, поэтому компонент пишет `t(status)`.
   Тип назван `BackendState`, а не `BackendStatus`, чтобы не совпасть с именем компонента из задачи 10.
 
-- [ ] **Шаг 1: Vitest.**
+- [x] **Шаг 1: Vitest.**
 
 Run (`frontend/`): `npm install -D vitest` (таблица спеки 5.1). Скрипт `test` = `vitest run`. `vitest.config.mts` —
 `defineConfig({ test: { environment: "node", include: ["src/**/*.test.ts"] } })` из `vitest/config`.
 Тесты импортируют модули по относительным путям: алиас `@/` Vitest сам не читает.
 
-- [ ] **Шаг 2: написать падающие тесты.**
+- [x] **Шаг 2: написать падающие тесты.**
 
 `src/lib/backend-status.test.ts`:
 
@@ -681,16 +686,16 @@ describe("messages", () => {
 });
 ```
 
-- [ ] **Шаг 3: запустить — падают.**
+- [x] **Шаг 3: запустить — падают.**
 
 Run: `npm run test`
 Expected: FAIL — не найдены `./backend-status` и `../../messages/en.json`.
 
-- [ ] **Шаг 4: реализовать.** `messages/ru.json` и `messages/en.json` — ключи и тексты из таблицы спеки 5.3,
+- [x] **Шаг 4: реализовать.** `messages/ru.json` и `messages/en.json` — ключи и тексты из таблицы спеки 5.3,
   вложенными объектами (`{"Metadata": {"title": ...}, "HomePage": {...}, "BackendStatus": {...}}`).
   `src/lib/backend-status.ts` — типы и функция из «Интерфейсов»: 200 → `"ok"`, всё остальное → `"unavailable"`.
 
-- [ ] **Шаг 5: всё зелёное.**
+- [x] **Шаг 5: всё зелёное.**
 
 Run: `npm run test && npm run lint && npm run format:check && npm run typecheck`
 Expected: 7 passed; остальное — код 0.
@@ -705,21 +710,21 @@ Expected: 7 passed; остальное — код 0.
 - Потребляет: `python -m app.export_openapi <путь>` (задача 5).
 - Даёт: `export const api = createClient<paths>()` в `src/lib/api/client.ts` (`baseUrl` не задан; `paths` — из `./schema`).
 
-- [ ] **Шаг 1: зависимости и скрипт.**
+- [x] **Шаг 1: зависимости и скрипт.**
 
 Run (`frontend/`): `npm install openapi-fetch && npm install -D openapi-typescript` (таблица спеки 5.1).
 Скрипт `gen:api` — дословно из спеки 5.4.
 
-- [ ] **Шаг 2: генерация повторяется байт в байт.**
+- [x] **Шаг 2: генерация повторяется байт в байт.**
 
 Run (бэкенд не запущен): `npm run gen:api`, скопировать оба файла в scratchpad, снова `npm run gen:api`, сравнить
 копии с файлами через `cmp`.
 Expected: файлы созданы; `cmp` молчит.
 
-- [ ] **Шаг 3: `src/lib/api/client.ts`** — см. «Интерфейсы». Исключение из TDD (см. «Глобальные ограничения»):
+- [x] **Шаг 3: `src/lib/api/client.ts`** — см. «Интерфейсы». Исключение из TDD (см. «Глобальные ограничения»):
   своего теста нет, файл проверяют `typecheck` в шаге 4 и e2e задачи 10.
 
-- [ ] **Шаг 4: проверки.**
+- [x] **Шаг 4: проверки.**
 
 Run: `npm run lint && npm run format:check && npm run typecheck`
 Expected: код 0 (сгенерированные файлы исключены из ESLint и Prettier).
@@ -740,7 +745,7 @@ Expected: код 0 (сгенерированные файлы исключены
 - Даёт: `locales`, `defaultLocale`, `type Locale` из `src/i18n/config.ts`; компонент `BackendStatus`
   из `src/components/backend-status.tsx`.
 
-- [ ] **Шаг 1: Playwright.**
+- [x] **Шаг 1: Playwright.**
 
 Run (`frontend/`): `npm install -D @playwright/test && npx playwright install chromium` (таблица спеки 5.1). Если Chromium не стартует
 из-за системных библиотек — попросить владельца выполнить `sudo npx playwright install-deps chromium`.
@@ -755,7 +760,7 @@ Run (`frontend/`): `npm install -D @playwright/test && npx playwright install ch
 `e2e/global-teardown.ts` — `export default async function globalTeardown(): Promise<void>`: удаляет
 `path.resolve(__dirname, "../.next-e2e")` через `rm(..., { recursive: true, force: true })`.
 
-- [ ] **Шаг 2: написать падающий e2e-тест** `e2e/home.spec.ts`:
+- [x] **Шаг 2: написать падающий e2e-тест** `e2e/home.spec.ts`:
 
 ```ts
 import { expect, test } from "@playwright/test";
@@ -767,7 +772,9 @@ test("shows the title and a running backend", async ({ page }) => {
 
   await expect(page).toHaveTitle(TITLE);
   await expect(page.locator("html")).toHaveAttribute("lang", "ru");
-  await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: TITLE }),
+  ).toBeVisible();
   await expect(page.getByText("Бэкенд: работает")).toBeVisible();
 });
 
@@ -780,7 +787,9 @@ test("shows unavailable backend when health returns 503", async ({ page }) => {
   await expect(page.getByText("Бэкенд: недоступен")).toBeVisible();
 });
 
-test("shows unavailable backend when the connection fails", async ({ page }) => {
+test("shows unavailable backend when the connection fails", async ({
+  page,
+}) => {
   await page.route("**/api/health", (route) => route.abort());
   await page.goto("/");
 
@@ -788,12 +797,17 @@ test("shows unavailable backend when the connection fails", async ({ page }) => 
 });
 ```
 
-- [ ] **Шаг 3: запустить — падает.**
+Отклонение (2026-10-26, одобрено владельцем): текст теста заменён на вывод Prettier — две строки длиннее 80 символов
+(проверка заголовка `h1` и заголовок третьего теста) перенесены. Причина: при предпроверке в задаче 6
+(`prettier --check --stdin-filepath e2e/home.spec.ts`) исходный текст не проходил проверку, а в задаче 10 нет шага
+`npm run format` — упал бы `format:check` в шаге 7. Селекторы, тексты и проверки не изменились.
+
+- [x] **Шаг 3: запустить — падает.**
 
 Run (`frontend/`, БД запущена): `npm run test:e2e`
 Expected: сборка и оба сервера стартуют; 3 теста FAIL — на странице шаблона нет «Система управления складом».
 
-- [ ] **Шаг 4: next-intl.**
+- [x] **Шаг 4: next-intl.**
 
 Run: `npm install next-intl` (таблица спеки 5.1).
   - `src/i18n/config.ts` — спека 5.3: `locales = ["ru", "en"] as const`, `type Locale = (typeof locales)[number]`,
@@ -804,7 +818,7 @@ Run: `npm install next-intl` (таблица спеки 5.1).
     `messages` — `import type` из `../messages/ru.json`, `locales` — `import type` из `./i18n/config`.
   - `next.config.ts` — `export default createNextIntlPlugin()(nextConfig)`.
 
-- [ ] **Шаг 5: layout, компонент, страница.**
+- [x] **Шаг 5: layout, компонент, страница.**
   - `src/app/layout.tsx` — `async RootLayout`: `const locale = await getLocale()`, `<html lang={locale} ...>`, дети —
     внутри `<NextIntlClientProvider>`. `generateMetadata(): Promise<Metadata>` возвращает `{ title: t("title") }`
     через `getTranslations("Metadata")`; описание шаблона убрать. Шрифт `Geist` — с `variable: "--font-sans"`
@@ -818,25 +832,25 @@ Run: `npm install next-intl` (таблица спеки 5.1).
     `<Card><CardContent><BackendStatus /></CardContent></Card>`.
   - Удалить картинки шаблона из `public/`.
 
-- [ ] **Шаг 6: e2e зелёные, рабочие файлы не тронуты.**
+- [x] **Шаг 6: e2e зелёные, рабочие файлы не тронуты.**
 
 Run (`frontend/`): `git add -A .` (чтобы после прогона были видны изменения), затем `npm run test:e2e`,
 затем `ls -d .next-e2e; git status --short .`
 Expected: 3 passed; `.next-e2e` — «No such file or directory»; в `git status` только строки `A `
 (в том числе `tsconfig.json` не изменён).
 
-- [ ] **Шаг 7: проверки после e2e (Review Focus 4).**
+- [x] **Шаг 7: проверки после e2e (Review Focus 4).**
 
 Run: `npm run typecheck && npm run lint && npm run format:check && npm run test`
 Expected: код 0 — хотя `next build` переписал `next-env.d.ts` на `.next-e2e`, `next typegen` вернул ссылки на `.next`.
 
-- [ ] **Шаг 8: опечатка в ключе ловится (спека 5.3).** Временно заменить в `page.tsx` `t("title")` на `t("titel")`.
+- [x] **Шаг 8: опечатка в ключе ловится (спека 5.3).** Временно заменить в `page.tsx` `t("title")` на `t("titel")`.
 
 Run: `npm run typecheck`
 Expected: FAIL — `TS2345: Argument of type '"titel"' is not assignable to parameter of type '"title"'`.
 Вернуть `t("title")`; `npm run typecheck` — зелёный.
 
-- [ ] **Шаг 9: dev-режим.** Запустить бэкенд на 8000 и `npm run dev` (оба в фоне).
+- [x] **Шаг 9: dev-режим.** Запустить бэкенд на 8000 и `npm run dev` (оба в фоне).
 
 Run: `curl -s http://localhost:3000 | grep -c "Система управления складом"` и `curl -s http://localhost:3000/api/health`
 Expected: число > 0; `{"status":"ok","db":"ok"}` (запрос прошёл через rewrite). Остановить оба сервера;
@@ -844,8 +858,8 @@ Expected: число > 0; `{"status":"ok","db":"ok"}` (запрос прошёл
 
 ### Завершение этапа 2
 
-- [ ] **Шаг 1:** `git add -A`.
-- [ ] **Шаг 2: список проверок для владельца** — точные команды из раздела «Команды» CLAUDE.md и таблицы спеки 1.1
+- [x] **Шаг 1:** `git add -A`.
+- [x] **Шаг 2: список проверок для владельца** — точные команды из раздела «Команды» CLAUDE.md и таблицы спеки 1.1
   (БД запущена):
 
 ```bash
@@ -870,7 +884,7 @@ npm run dev           # открыть http://localhost:3000, затем Ctrl+C 
   серой рамкой; метка «Бэкенд: работает» — тёмная «таблетка» с белым текстом. Если на странице чёрный текст
   с засечками без рамок и плашек — Tailwind не подключился (например, обёртка next-intl затёрла `turbopack.rules`
   в `next.config.ts`).
-- [ ] **Шаг 3: после подтверждения — коммит.** `git add -A` (захватит отметки чекбоксов в плане), затем
+- [x] **Шаг 3: после подтверждения — коммит.** `git add -A` (захватит отметки чекбоксов в плане), затем
   `git commit -m "feat: add frontend skeleton with backend status page"`. Остановка до команды на этап 3.
 
 ---
@@ -1003,6 +1017,8 @@ Expected: без ошибок. Настоящая проверка — зелё�
 
 - [ ] **Шаг 1: `README.md`** — спека 9; разделы: «Требования», «Первый запуск» (включая браузер для Playwright),
   «Команды», «E2E-тесты», «Смена пароля БД», «Пересоздание БД», «Структура проекта».
+  Плюс правило из раздела «Отложенные замечания ревью этапа 2» (M1): после клонирования и после `npm run test:e2e`
+  выполнить `npm run typecheck` (или `npm run dev`), чтобы редактор видел типы Next.js.
 - [ ] **Шаг 2: корневой `CLAUDE.md`** — четыре правки из спеки 9: команда БД — `docker compose up -d --wait`;
   в строке про e2e — не запускать одновременно с pytest; «Библиотеки» — Next.js через
   `frontend/node_modules/next/dist/docs/`, остальное через Context7; «SQLAlchemy 2.0» → «SQLAlchemy 2».
@@ -1011,6 +1027,9 @@ Expected: без ошибок. Настоящая проверка — зелё�
   - перед первым тестом с `caplog` добавить `disable_existing_loggers=False` в `fileConfig` в `alembic/env.py`;
   - в коде приложения доступ к БД — только через `get_db`; `SessionLocal` напрямую не использовать.
 - [ ] **Шаг 4: `frontend/CLAUDE.md`** — под строкой `@AGENTS.md` правила из спеки 9; затем `npm run format` в `frontend/`.
+  Плюс правило: после `npx shadcn add` — сразу `npm run format`: shadcn генерирует код не в стиле Prettier проекта,
+  и без этого упадёт `format:check` (замечено в задаче 7). И правило M1 (как в шаге 1): после клонирования и после
+  `npm run test:e2e` — `npm run typecheck` (или `npm run dev`), чтобы редактор видел типы Next.js.
 - [ ] **Шаг 5: `docs/ROADMAP.md`** — таблица «Модуль | Статус»: скелет проекта — готово; пользователи и роли, каталог
   товаров, склады, остатки и движения, переключение языка ru/en — запланировано.
 - [ ] **Шаг 6: проверка.** Каждая команда из README и всех CLAUDE.md существует (скрипты `package.json`, `check.sh`).
@@ -1098,3 +1117,27 @@ M7 — `dependency_overrides.clear()` — так в плане, вреда не�
   о примерах в OpenAPI ещё нет. Когда вернуться: когда договоримся о примерах в OpenAPI для эндпоинтов.
   Исправление — явный пример `{"status": "error", "db": "error"}` для 503 в `responses` декоратора; после этого —
   `npm run gen:api` (типы API изменятся).
+
+## Отложенные замечания ревью этапа 2
+
+Ревью staged-изменений этапа 2 (2026-10-26, модель opus): Critical и Important нет. Исправлено сразу (решение
+владельца): M2 — в `frontend/.env.example` комментарий к `BACKEND_URL` (адрес читается при запуске `next dev`
+и `next build` и запоминается в сборке); M4 — из `next.config.ts` убран комментарий шаблона `/* config options here */`.
+
+Отложены:
+
+- **M1 — после `npm run test:e2e` файл `next-env.d.ts` ссылается на удалённую `.next-e2e`.** `next build` переписывает
+  этот файл (он в `.gitignore`); `npm run typecheck` и `npm run dev` возвращают ссылки на `.next` (Review Focus 4).
+  Но редактор или голый `tsc` на свежем клоне без `.next/` показывают `Cannot find name 'LayoutProps'` в `layout.tsx`.
+  Почему отложено: скрипты и CI не затронуты, код менять не нужно. Когда вернуться: задача 13 — правило в README
+  (шаг 1) и в `frontend/CLAUDE.md` (шаг 4): после клонирования и после `npm run test:e2e` выполнить
+  `npm run typecheck` (или `npm run dev`), чтобы редактор видел типы Next.js.
+- **M3 — `BackendStatus` не отменяет запрос `/api/health` при размонтировании.** Флаг отмены только не даёт обновить
+  состояние; в dev-режиме (StrictMode) уходят два запроса. Почему отложено: запрос дешёвый, вреда нет, код
+  соответствует плану. Когда вернуться: если появятся запросы, которые дорого повторять, — `AbortController`
+  и `api.GET(..., { signal })`, отмену в `catch` игнорировать.
+- **P1 — нет автоматической проверки, что стили Tailwind/shadcn применились.** Риск назван в спеке 5.2 (обёртка
+  next-intl может затереть `turbopack.rules`), но защищает от него только ручная проверка владельца. Почему отложено:
+  это изменение плана и спеки. Когда вернуться: при первом изменении `next.config.ts` или обновлении Next.js /
+  next-intl; вариант — e2e-проверка `toHaveCSS` шрифта Geist или цвета метки. До этого стили проверяются вручную
+  (см. «Завершение этапа 2»).
