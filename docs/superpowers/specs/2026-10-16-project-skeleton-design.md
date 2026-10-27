@@ -394,7 +394,8 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 - Нужна только запущенная БД. Если запущен dev-сервер на 3000, e2e ему не мешает
   (`.next/dev` и `.next-e2e` — разные папки). После e2e `git status` чист, папки `.next-e2e` нет.
 - Браузер ставится один раз: `npx playwright install chromium` в `frontend/`; на Linux/WSL ещё системные
-  библиотеки — `sudo npx playwright install-deps chromium` (шаг в README).
+  библиотеки — `sudo env "PATH=$PATH" npx playwright install-deps chromium` (шаг в README; `env "PATH=$PATH"` —
+  потому что Node стоит через nvm, а `sudo` сбрасывает `PATH` и не находит `npx`).
 
 ## 7. scripts/check.sh
 
@@ -437,9 +438,11 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 - Зависимости строго по lock-файлам: `uv sync --locked`, `npm ci`.
 - `setup-node`: `node-version-file: frontend/.nvmrc`, `cache: npm`, `cache-dependency-path: frontend/package-lock.json`.
   Lock-файл лежит не в корне: без `cache-dependency-path` `setup-node` падает («Dependencies lock file is not found»).
-- Версии actions (сверено 2026-10-17): `actions/checkout@v7`, `actions/setup-node@v7`,
-  `actions/upload-artifact@v7`; `astral-sh/setup-uv@v10.3.0` — точная версия, потому что мажорных тегов
+- Версии actions (сверено 2026-10-17, setup-uv — 2026-10-27): `actions/checkout@v7`, `actions/setup-node@v7`,
+  `actions/upload-artifact@v7`; `astral-sh/setup-uv@v10.3.2` — точная версия, потому что мажорных тегов
   (`v10`) setup-uv не публикует.
+- Runner — `ubuntu-24.04` во всех заданиях, а не `ubuntu-latest`: плавающий ярлык GitHub переводит на новую LTS,
+  и CI мог бы сломаться без изменений в коде; локально — тоже Ubuntu 24.04.
 
 | Задание | Шаги |
 |---|---|
@@ -449,8 +452,11 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
 
 ## 9. Документация
 
-- **README.md** (по-русски): требования (Docker, uv, Node 24 через nvm); запуск с нуля по шагам, включая браузер
-  для Playwright (`npx playwright install chromium`, на Linux/WSL ещё `sudo npx playwright install-deps chromium`);
+- **README.md** (по-русски): требования (Docker, uv, Node 24 через nvm); запуск с нуля по шагам (зависимости
+  бэкенда — `uv sync --locked`, как в CI: ставит ровно версии из `uv.lock` и не меняет его), включая браузер
+  для Playwright (`npx playwright install chromium`, на Linux/WSL ещё `sudo env "PATH=$PATH" npx playwright install-deps chromium`
+  с пояснением: Node стоит через nvm, а `sudo` сбрасывает `PATH` — обычная форма `sudo npx ...` падает
+  с `sudo: npx: command not found`);
   все команды (БД — `docker compose up -d --wait`); e2e (порты 8001/3001, не запускать одновременно с pytest);
   смена пароля БД; пересоздание БД (`docker compose down -v && docker compose up -d --wait` — init-скрипт
   срабатывает только на пустом томе); структура проекта.
@@ -459,10 +465,14 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
   - в строке про e2e: не запускать одновременно с pytest — обе используют `wms_crm_test`;
   - раздел «Библиотеки»: для Next.js — встроенная документация `frontend/node_modules/next/dist/docs/`
     (см. `frontend/AGENTS.md`), для остальных библиотек — Context7;
-  - раздел «Структура»: «SQLAlchemy 2.0» → «SQLAlchemy 2» (ставится актуальная 2.1, API в стиле 2.x).
+  - раздел «Структура»: «SQLAlchemy 2.0» → «SQLAlchemy 2» (ставится актуальная 2.1, API в стиле 2.x);
+  - в строке «новая миграция» заглушка `-m "описание"` → английский пример `-m "add products table"`
+    (описание попадает в имя файла миграции, а имена в проекте — по-английски). Тот же пример — в README
+    и `backend/CLAUDE.md`.
 - **backend/CLAUDE.md** (коротко): команды; эндпоинты с БД — обычный `def`; адрес БД — только через
   `effective_database_url`; модели наследуют `Base` и реэкспортируются в `app/models/__init__.py`;
-  миграции — `alembic revision --autogenerate`, автосгенерированную миграцию всегда просматривать
+  миграции — `alembic revision --autogenerate`, описание миграции — по-английски (оно попадает в имя файла),
+  автосгенерированную миграцию всегда просматривать
   (переименование колонки autogenerate видит как удаление и создание — исправлять вручную на `op.alter_column`);
   после изменения эндпоинтов или схем — `npm run gen:api` в `frontend/` и закоммитить `openapi.json` и `schema.d.ts`;
   тесты — через фикстуры `client` и `db_session`.
@@ -470,8 +480,10 @@ pytest и e2e используют одну `wms_crm_test` — одноврем�
   тексты интерфейса — только в `messages/*.json` (ru и en); запросы — через `src/lib/api/client.ts`;
   после изменения API — `npm run gen:api`; компоненты — `npx shadcn add`; Vitest — только чистая логика
   (`src/lib`, `src/i18n`); e2e — в `e2e/`.
-- **docs/ROADMAP.md**: только модули и статусы. Создаётся на этапе 4, скелет проекта — сразу «готово»;
+- **docs/ROADMAP.md**: модули и статусы. Создаётся на этапе 4, скелет проекта — сразу «готово»;
   пользователи и роли, каталог товаров, склады, остатки и движения, переключение языка ru/en — «запланировано».
+  Под таблицей — строка со ссылками на разделы «Отложенные замечания ревью» в плане скелета, чтобы они
+  не потерялись после завершения ветки.
 
 ## 10. Этапы реализации
 
