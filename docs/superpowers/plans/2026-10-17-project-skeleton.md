@@ -1149,12 +1149,12 @@ git add -A
 git commit -m "chore: add CI workflow" -- .github/workflows/ci.yml
 git commit -m "docs: add README, roadmap and CLAUDE.md rules"
 ```
-- [ ] **Шаг 4: финальное ревью ветки** — superpowers:requesting-code-review, модель ревьюера явно — **opus** (дифф меняет
+- [x] **Шаг 4: финальное ревью ветки** — superpowers:requesting-code-review, модель ревьюера явно — **opus** (дифф меняет
   `.env.example` и пароли БД). Замечания — через superpowers:receiving-code-review; исправления коммитятся после
   подтверждения.
-- [ ] **Шаг 5: завершение ветки** — superpowers:finishing-a-development-branch, вариант «Push and create a Pull Request»
+- [x] **Шаг 5: завершение ветки** — superpowers:finishing-a-development-branch, вариант «Push and create a Pull Request»
   (push и `gh pr create` — после подтверждения).
-- [ ] **Шаг 6: CI** — `gh pr checks`: задания `backend`, `frontend`, `e2e` зелёные. Если нет —
+- [x] **Шаг 6: CI** — `gh pr checks`: задания `backend`, `frontend`, `e2e` зелёные. Если нет —
   superpowers:systematic-debugging.
 
 ---
