@@ -4,7 +4,7 @@
 Веб-приложение складского учёта: каталог товаров, остатки и движения, несколько складов, пользователи с ролями, два языка (русский и английский). Учебный портфолио-проект, позже — основа CRM.
 
 ## Структура
-- backend/  — Python 3.13, FastAPI, SQLAlchemy 2.0 (синхронно), Alembic, Pydantic 2, PostgreSQL. Пакеты — только через uv.
+- backend/  — Python 3.13, FastAPI, SQLAlchemy 2 (синхронно), Alembic, Pydantic 2, PostgreSQL. Пакеты — только через uv.
 - frontend/ — Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui. Пакеты — npm.
 - docs/superpowers/specs/ — спеки (дизайн-документы) Superpowers.
 - docs/superpowers/plans/ — планы реализации Superpowers (очередь задач).
@@ -13,19 +13,19 @@
 Правила написания кода — в backend/CLAUDE.md и frontend/CLAUDE.md.
 
 ## Команды
-БД (PostgreSQL в Docker), из корня:  docker compose up -d db
+БД (PostgreSQL в Docker), из корня:  docker compose up -d --wait
 Бэкенд, из папки backend/:
 - запуск:          uv run uvicorn app.main:app --reload --port 8000
 - тесты:           uv run pytest
 - линтеры и типы:  uv run ruff check . && uv run ruff format --check . && uv run mypy app
 - миграции:        uv run alembic upgrade head
-- новая миграция:  uv run alembic revision --autogenerate -m "описание"
+- новая миграция:  uv run alembic revision --autogenerate -m "add products table"
 Фронтенд, из папки frontend/:
 - запуск:          npm run dev   (http://localhost:3000)
 - проверки:        npm run lint && npm run format:check && npm run typecheck
 - unit-тесты:      npm run test       (Vitest)
-- e2e-тесты:       npm run test:e2e   (Playwright; нужны запущенные БД и бэкенд)
-- типы API:        npm run gen:api    (нужен запущенный бэкенд)
+- e2e-тесты:       npm run test:e2e   (Playwright; нужна запущенная БД — бэкенд и фронт Playwright поднимает сам; не запускать одновременно с pytest — обе используют wms_crm_test)
+- типы API:        npm run gen:api    (берёт схему из кода бэкенда — запускать бэкенд не нужно)
 Все проверки разом, из корня: ./scripts/check.sh
 
 ## Процесс разработки (Superpowers)
@@ -35,7 +35,7 @@
 - Git worktrees не используем: работаем в этой папке на обычной ветке (ответ на вопрос using-git-worktrees — «нет», спрашивать не нужно).
 - Спеки и планы сохраняй в пути по умолчанию Superpowers и пиши их на русском.
 - План выполняй через superpowers:executing-plans. Выбор способа выполнения в конце writing-plans не предлагай. Subagent-driven — только по моей просьбе.
-- Финальное ревью ветки: если дифф меняет вход, токены, пароли, проверку ролей и прав, CORS или cookies, либо .env.example; в остальных случаях — sonnet. Модель ревьюера указывай явно.
+- Финальное ревью ветки: если дифф меняет вход, токены, пароли, проверку ролей и прав, CORS или cookies, либо .env.example, — opus; в остальных случаях — sonnet. Модель ревьюера указывай явно.
 - Завершение ветки: всегда вариант «Push and create a Pull Request».
   Локальный merge в main запрещён — PR вливаю я сам после ревью и зелёного CI.
 - Визуальный помощник brainstorming (браузер) не предлагай.
@@ -51,18 +51,19 @@
 ## Git
 - Ветки, коммиты и PR — на английском. Коммиты в стиле Conventional Commits: feat:, fix:, test:, refactor:, docs:, chore:.
 - commit, push, merge и создание PR выполняются только после моего подтверждения — это обеспечивают права в .claude/settings.json. Не пытайся их обойти.
+- В коммитах и PR не добавляй строку Co-Authored-By и подпись «Generated with Claude Code».
 
 ## Язык и общение
 - Общайся со мной по-русски, простыми словами: я учусь и не всегда читаю код целиком.
 - Термины поясняй при первом упоминании в сессии.
 - После изменений кратко говори, что сделано и зачем.
 - Документация (спеки, планы, README) — на русском. Код, имена, комментарии в коде, ветки, коммиты, PR — на английском. Тексты интерфейса не пиши строками в коде — только через файлы переводов (ru и en). Основной язык — русский.
-- Вопросы задавай по одному. Предлагая варианты, отмечай рекомендуемый и объясняй почему.
+- Уточняющие вопросы задавай одним нумерованным списком: к каждому предлагай варианты, отмечай рекомендуемый и объясняй почему. Если ответ на один вопрос меняет остальные — сначала задай только его.
 
 ## Секреты
 - Секреты — только в .env (не попадают в git). В репозитории лежит .env.example с фиктивными значениями.
 - Файлы .env ты прочитать не можешь (запрет в настройках). Имена всех переменных окружения смотри в .env.example. Если нужны новые переменные — добавь их в .env.example и попроси меня перенести их в .env.
 
 ## Библиотеки
-- Перед использованием API библиотек сверяйся с Context7.
+- Перед использованием API библиотек сверяйся с документацией: для Next.js — встроенная документация frontend/node_modules/next/dist/docs/ (см. frontend/AGENTS.md), для остальных библиотек — Context7.
 - Новые зависимости: бэкенд — uv add, фронтенд — npm install. Каждую новую зависимость упоминай в плане и объясняй, зачем она нужна.

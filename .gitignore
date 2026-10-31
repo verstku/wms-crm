@@ -22,6 +22,9 @@ CLAUDE.local.md
 .superpowers/
 .worktrees/
 
+# scripts/check.sh temporary files
+.tmp/
+
 # Python
 __pycache__/
 *.py[cod]
