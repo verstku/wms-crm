@@ -18,7 +18,8 @@
 `docs/superpowers/plans/2026-10-17-project-skeleton.md`, пункты I1, I2, M7, M8) показало: четыре правила из
 `CLAUDE.md` (подтверждение commit/push/PR/merge, запрет чтения `.env`, неприкосновенность тестов из `main`,
 подтверждение разрушительных операций) держатся на текстовых правилах `.claude/settings.json` и двух bash-хуках,
-которые легко обойти даже случайно. В `docs/ROADMAP.md` запланирована ветка `chore/harden-claude-permissions`.
+которые легко обойти даже случайно. В `docs/ROADMAP.md` для этого была запланирована ветка
+`chore/harden-claude-permissions`; теперь строка «Усиление прав Claude Code» там со статусом «отложено».
 Этот документ — независимый анализ: модель угроз, оценка вариантов, рекомендуемая архитектура, конкретные
 фрагменты, план проверки и порядок внедрения. Анализ сделан без изменений в файлах проекта.
 
@@ -481,8 +482,8 @@ def check_gh(args):
 
 
 def main():
-    mode, data = sys.argv[1], json.load(sys.stdin)
     try:
+        mode, data = sys.argv[1], json.load(sys.stdin)  # inside try: bad input must exit 2, not 1
         if mode == "edit":
             check_edit(data["tool_input"])            # protected tests + .env (as protect-tests.sh today)
         else:
@@ -681,6 +682,14 @@ git --git-dir="$LAB/remote.git" for-each-ref > "$LAB/refs.before"
 **Fail-closed:** в копии настроек пробного репозитория поменять путь хука на несуществующий → любая Bash-команда
 блокируется с понятной ошибкой (а не проходит).
 
+**Стоп-кран и «Yes, don't ask again»** (предположения из раздела 0):
+1. В пробном репозитории создать `.claude/settings.local.json` с `{"disableAllHooks": true}` → `/hooks` не
+   показывает `guard.py`, команда с ответом хука `ask` (например `git -C . status`, если убрать ask-правило
+   `Bash(git -C *)` из копии настроек) выполняется без вопроса. Удалить файл → вопрос вернулся.
+2. На вопрос хука по `git -C . status` ответить «Yes, and don't ask again» → повторить ту же команду: вопрос
+   хука должен появиться снова. Если не появился — записать, какое правило сохранилось в `settings.local.json`,
+   и учесть это в аудите настроек (раздел 3).
+
 **Песочница (этап 6), там же:** `python3 -c "print(open('.env').read())"` → ошибка доступа;
 `grep -r SECRET .` → без `lab-only`; `git -C . push origin HEAD` → ошибка записи или сети, refs без изменений;
 `curl https://example.com` → вопрос о домене или отказ; `cat .env.example` → работает (так проверяется
@@ -722,7 +731,7 @@ git --git-dir="$LAB/remote.git" for-each-ref > "$LAB/refs.before"
 |---|---|---|
 | 1. GitHub (вне ветки, руками) | Fine-grained PAT, push protection, проверка настроек Actions | `gh auth login` прежним способом; push protection выключается там же |
 | 2. Права | Раздел 4.1 в `.claude/settings.json` | `git checkout main -- .claude/settings.json` или правка файла в редакторе |
-| 3. Хук guard.py | `guard.py` + `test_guard.py` (TDD) + подключение с `onFailure: block` + шаг в `check.sh`; старые `.sh` удалить только после зелёных 5.1 и 5.2 | Временный стоп-кран: `{"disableAllHooks": true}` в `.claude/settings.local.json` (отключит и форматирование); или вернуть в `settings.json` старые `.sh` |
+| 3. Хук guard.py | `guard.py` (исполняемый: `chmod +x`, запускается через `#!`) + `test_guard.py` (TDD) + подключение с `onFailure: block` + шаг в `check.sh`; старые `.sh` удалить только после зелёных 5.1 и 5.2 | Вернуть в `settings.json` старые `.sh`; временный стоп-кран — `{"disableAllHooks": true}` в `.claude/settings.local.json` (отключит и форматирование; работает по документации, проверить в 5.2) |
 | 4. Тесты | Предупреждение при коммите, мутаторы в Bash, CI `protected-files` | Удалить job из `ci.yml` или ветку логики в хуке |
 | 5. Пользовательские настройки | Раздел 4.2 (`autoMode`, `disableBypassPermissionsMode`, deny на токен) | Удалить добавленные ключи из `~/.claude/settings.json`; только `autoMode` можно убрать командой `claude auto-mode reset` |
 | 6. Песочница (по желанию, через неделю) | `apt install`, раздел 4.6, проверки 5.2 | `/sandbox` → выключить, или `"sandbox": {"enabled": false}` в `settings.local.json` |
@@ -732,7 +741,8 @@ git --git-dir="$LAB/remote.git" for-each-ref > "$LAB/refs.before"
 Важно для отката:
 - Все файлы правил ты всегда можешь поправить сам в редакторе, вне Claude. Хук не мешает редактору.
 - Если `guard.py` сломался и блокирует всё, сработал fail-closed. Стоп-кран — `disableAllHooks` в
-  `settings.local.json`.
+  `settings.local.json` (по документации; до внедрения проверить в 5.2). Надёжный путь в любом случае — вернуть
+  старые хуки в `settings.json` в редакторе.
 - Во время этапов 2–3 правки в `.claude/**` будут спрашивать подтверждение. Это ожидаемо и только в этой ветке.
 
 ---
