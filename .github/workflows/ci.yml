@@ -84,7 +84,11 @@ jobs:
         run: npm run gen:api
       - name: Check API types are up to date
         working-directory: ${{ github.workspace }}
-        run: git diff --exit-code -- frontend/openapi.json frontend/src/lib/api/schema.d.ts
+        # gen:api recreates a file deleted from git as untracked, and git diff ignores
+        # untracked files, so first check that both files are tracked.
+        run: |
+          git ls-files --error-unmatch -- frontend/openapi.json frontend/src/lib/api/schema.d.ts
+          git diff --exit-code -- frontend/openapi.json frontend/src/lib/api/schema.d.ts
 
   e2e:
     runs-on: ubuntu-24.04
